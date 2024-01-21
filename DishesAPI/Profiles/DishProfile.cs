@@ -10,6 +10,7 @@ namespace DishesAPI.Profiles
         {
             CreateMap<Dish, DishDto>();
             CreateMap<DishForCreationDto, Dish>();
+            CreateMap<DishForUpdateDto, Dish>();
         }
     }
 }

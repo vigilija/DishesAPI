@@ -92,7 +92,9 @@ app.MapPost("/dishes", async Task<CreatedAtRoute<DishDto>>
     ) =>
 {
     var dishEntity = mapper.Map<Dish>(dishForCreationDto);
-    dischesDbContext.Add(dishForCreationDto);
+
+    dischesDbContext.Add(dishEntity);
+
     await dischesDbContext.SaveChangesAsync();
 
     var dishToReturn = mapper.Map<DishDto>(dishEntity);
@@ -104,6 +106,26 @@ app.MapPost("/dishes", async Task<CreatedAtRoute<DishDto>>
 
     //var linkToDIsh = linkGenerator.GetUriByName(httpContext, "GetDish", new {dishId = dishToReturn.Id});
     //return TypedResults.Created(linkToDIsh, dishToReturn);
+});
+
+app.MapPut("/dishes/{dishId:guid}", async Task<Results<NotFound, NoContent>> 
+    (DishesDbContext dischesDbContext,
+    IMapper mapper,
+    Guid dishId,
+    DishForUpdateDto dishToUpdateDto) =>
+{
+    var dishEntity = await dischesDbContext
+    .Dishes
+    .FirstOrDefaultAsync(d => d.Id == dishId);
+
+    if (dishEntity == null) return TypedResults.NotFound();
+
+    mapper.Map(dishToUpdateDto, dishEntity);
+
+    await dischesDbContext.SaveChangesAsync();
+
+    return TypedResults.NoContent();
+
 });
 
 //---migrates and recreates DB on each run
