@@ -46,7 +46,7 @@ app.MapGet("/dishes/{dishId:guid}", async Task<Results<NotFound, Ok<DishDto>>> (
     if (dishEntry != null) return TypedResults.NotFound();
 
     return TypedResults.Ok(mapper.Map<DishDto>(dishEntry));
-});
+}).WithName("GetDish");
 
 app.MapGet("/dishes/{dishName}", async Task<Results<NotFound, Ok<DishDto>>>
     (DishesDbContext dishesDbContext,
@@ -83,17 +83,27 @@ app.MapGet("/disches/{dishId}/ingrediets", async Task<Results<NotFound, Ok<IEnum
 });
 
 //---Post action to create resaurces
-app.MapPost("/dishes", async (DishesDbContext dischesDbContext,
+app.MapPost("/dishes", async Task<CreatedAtRoute<DishDto>>
+    (DishesDbContext dischesDbContext,
     IMapper mapper,
-    [FromBody] DishForCreationDto dishForCreationDto) =>
+    [FromBody] DishForCreationDto dishForCreationDto
+   // LinkGenerator linkGenerator,
+    //HttpContext httpContext
+    ) =>
 {
     var dishEntity = mapper.Map<Dish>(dishForCreationDto);
     dischesDbContext.Add(dishForCreationDto);
     await dischesDbContext.SaveChangesAsync();
 
     var dishToReturn = mapper.Map<DishDto>(dishEntity);
-    return TypedResults.Ok(dishToReturn);
 
+    return TypedResults.CreatedAtRoute(
+        dishToReturn,
+        "GetDish",
+        new { dishId = dishToReturn.Id });
+
+    //var linkToDIsh = linkGenerator.GetUriByName(httpContext, "GetDish", new {dishId = dishToReturn.Id});
+    //return TypedResults.Created(linkToDIsh, dishToReturn);
 });
 
 //---migrates and recreates DB on each run
