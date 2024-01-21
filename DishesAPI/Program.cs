@@ -1,5 +1,6 @@
 using AutoMapper;
 using DishesAPI.DbContexts;
+using DishesAPI.Entities;
 using DishesAPI.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,7 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
+//---Get actions to get data about dishes
 app.MapGet("/dishes", async Task<Ok<IEnumerable<DishDto>>> (DishesDbContext dishesDbContext,
     ClaimsPrincipal claimsPrincipal,
     IMapper mapper,
@@ -80,7 +82,21 @@ app.MapGet("/disches/{dishId}/ingrediets", async Task<Results<NotFound, Ok<IEnum
         .FirstOrDefaultAsync(d => d.Id == dishId))?.Ingredients));
 });
 
-//migrates and recreates DB on each run
+//---Post action to create resaurces
+app.MapPost("/dishes", async (DishesDbContext dischesDbContext,
+    IMapper mapper,
+    [FromBody] DishForCreationDto dishForCreationDto) =>
+{
+    var dishEntity = mapper.Map<Dish>(dishForCreationDto);
+    dischesDbContext.Add(dishForCreationDto);
+    await dischesDbContext.SaveChangesAsync();
+
+    var dishToReturn = mapper.Map<DishDto>(dishEntity);
+    return TypedResults.Ok(dishToReturn);
+
+});
+
+//---migrates and recreates DB on each run
 using (var serviceScope = app.Services.GetService<IServiceScopeFactory>().CreateScope())
 {
     var context = serviceScope.ServiceProvider.GetRequiredService<DishesDbContext>();
