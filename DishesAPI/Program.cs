@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<DishesDbContext>(o => o.UseSqlite(
-    builder.Configuration["ConnectionString:DishesDBConnectionString"]));
+    builder.Configuration["ConnectionStrings:DishesDBConnectionString"]));
 
 
 var app = builder.Build();
@@ -14,22 +14,26 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/dishes", async (DishesDbContext dishesDbContext) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    return await dishesDbContext.Dishes.ToListAsync();
+});
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/dishes/{dishId:guid}", async (DishesDbContext dishesDbContext, Guid dishId) =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+    return await dishesDbContext.Dishes.FirstOrDefaultAsync(d => d.Id == dishId);
+});
+
+app.MapGet("/dishes/{dishName}", async (DishesDbContext dishesDbContext, string dishName) =>
+{
+    return await dishesDbContext.Dishes.FirstOrDefaultAsync(d => d.Name == dishName);
+});
+
+app.MapGet("/disches/{dishId}", async (DishesDbContext dischDbContext, Guid dishId) =>
+{
+    return (await dischDbContext.Dishes
+    .Include(d => d.Ingredients)
+    .FirstOrDefaultAsync(d => d.Id == dishId))?.Ingredients;
 });
 
 //migrates and recreates DB on each run
@@ -42,7 +46,7 @@ using (var serviceScope = app.Services.GetService<IServiceScopeFactory>().Create
 
 app.Run();
 
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+//internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+//{
+//    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+//}
