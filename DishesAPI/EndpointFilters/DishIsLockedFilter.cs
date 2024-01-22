@@ -1,8 +1,15 @@
 ﻿
 namespace DishesAPI.EndpointFilters;
 
-public class RendangDishIsLockedFilter : IEndpointFilter
+public class DishIsLockedFilter : IEndpointFilter
 {
+    private readonly Guid _lockedDishId;
+
+    public DishIsLockedFilter(Guid lockedDishId)
+    {
+        _lockedDishId = lockedDishId;
+    }
+
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         Guid dishId;
@@ -18,15 +25,14 @@ public class RendangDishIsLockedFilter : IEndpointFilter
         {
             throw new NotSupportedException("This filter is not supported for this scenario.");
         }
-
-        var rendangId = new Guid("fd630a57-2352-4731-b25c-db9cc7601b16");
-        if (dishId == rendangId)
+    
+        if (dishId == _lockedDishId)
         {
             return TypedResults.Problem(new()
             {
                 Status = 400,
                 Title = "Dish is perfect, no need to change",
-                Detail = "You cannot update perfection."
+                Detail = "You cannot update or delete perfection."
             });
         }
 
