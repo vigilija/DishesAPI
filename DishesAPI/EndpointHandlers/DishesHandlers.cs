@@ -14,9 +14,12 @@ public static class DishesHandlers
         DishesDbContext dishesDbContext,
         ClaimsPrincipal claimsPrincipal,
         IMapper mapper,
+        ILogger<DishDto> logger,
         string? name)
     {
         Console.WriteLine($"User authenticated? {claimsPrincipal.Identity?.IsAuthenticated}");
+
+        logger.LogInformation("Getting the dishes...");
 
         return TypedResults.Ok(mapper.Map<IEnumerable<DishDto>>(await dishesDbContext.Dishes
             .Where(d => name == null || d.Name.Contains(name))
