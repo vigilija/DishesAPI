@@ -1,4 +1,5 @@
-﻿using DishesAPI.EndpointHandlers;
+﻿using DishesAPI.EndpointFilters;
+using DishesAPI.EndpointHandlers;
 using System.Reflection;
 
 namespace DishesAPI.Extensions;
@@ -16,24 +17,9 @@ public static class EndpointRouteBuilderExtensions
         dishesEndpoints.MapGet("/{dishName}", DishesHandlers.GetDishByNameAsync);
         dishesEndpoints.MapPost("", DishesHandlers.CreateDishAsync);
         dishWithGuidIdEndpoints.MapPut("", DishesHandlers.UpdateDishAsync)
-            .AddEndpointFilter(async (context, next) =>
-            {
-                var dishId = context.GetArgument<Guid>(2);
-                var rendangId = new Guid("fd630a57-2352-4731-b25c-db9cc7601b16");
-                if (dishId == rendangId)
-                {
-                    return TypedResults.Problem(new()
-                    {
-                        Status = 400,
-                        Title = "Dish is perfect, no need to change",
-                        Detail = "You cannot update perfection."
-                    });
-                }
-
-                var resul = await next.Invoke(context);
-                return resul;
-            });
-        dishWithGuidIdEndpoints.MapDelete("", DishesHandlers.DeleteDishAsync);
+            .AddEndpointFilter<RendangDishIsLockedFilter>();
+        dishWithGuidIdEndpoints.MapDelete("", DishesHandlers.DeleteDishAsync)
+            .AddEndpointFilter<RendangDishIsLockedFilter>();
     }
 
     public static void RegisterIngredientsEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
