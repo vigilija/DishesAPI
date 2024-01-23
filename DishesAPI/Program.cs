@@ -21,36 +21,37 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddProblemDetails();
 
+builder.Services.AddAuthentication().AddJwtBearer();
+builder.Services.AddAuthorization();
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("RequireAdminFromBelgium", policy => 
+    policy
+    .RequireRole("admin")
+    .RequireClaim("country", "Belgium"));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler();
-    //app.UseExceptionHandler(configureApplicationBuilder =>
-    //{
-    //    configureApplicationBuilder.Run(
-    //        async context =>
-    //        {
-    //            context.Response.StatusCode = (int)
-    //            HttpStatusCode.InternalServerError;
-    //            context.Response.ContentType = "text/html";
-    //            await context.Response.WriteAsync("An unexpected problem happened.");
-    //        });
-    //});
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication(); //not needed anymore but for code crearity added
+app.UseAuthorization(); // neds to be added after Authentication
 
 app.RegisterDishesEndpoints();
 app.RegisterIngredientsEndpoints();
 
 //---migrates and recreates DB on each run
-//using (var serviceScope = app.Services.GetService<IServiceScopeFactory>().CreateScope())
-//{
-//    var context = serviceScope.ServiceProvider.GetRequiredService<DishesDbContext>();
-//    context.Database.EnsureCreated();
-//    context.Database.Migrate();
-//};
+using (var serviceScope = app.Services.GetService<IServiceScopeFactory>().CreateScope())
+{
+    var context = serviceScope.ServiceProvider.GetRequiredService<DishesDbContext>();
+    context.Database.EnsureCreated();
+    context.Database.Migrate();
+};
 
 app.Run();
