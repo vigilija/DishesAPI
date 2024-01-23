@@ -19,7 +19,9 @@ public static class EndpointRouteBuilderExtensions
         dishWithGuidIdEndpoints.MapGet("", DishesHandlers.GetDishByIdAsync)
             .WithName("GetDish");
         dishesEndpoints.MapGet("/{dishName}", DishesHandlers.GetDishByNameAsync);
-        dishesEndpoints.MapPost("", DishesHandlers.CreateDishAsync);
+
+        dishesEndpoints.MapPost("", DishesHandlers.CreateDishAsync)
+            .AddEndpointFilter<ValidateAnnotationsFilter>();
 
         dishWithGuidIdEndpointsAndLockFilters.MapPut("", DishesHandlers.UpdateDishAsync);
 
