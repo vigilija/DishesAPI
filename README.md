@@ -7,8 +7,8 @@ End point API to creat Dishes nad Ingredients for dishes.
 * Get /dishes/{dishName}
 * Get /disches/{dishId}/ingrediets
 * Post /dishes
-# Put /dish/{dishId}
-# Delete /dishes/{dishId}
+* Put /dish/{dishId}
+* Delete /dishes/{dishId}
 
 ### Ingredients Handlers
 * Get /dishes/{dishId}/ingredients
