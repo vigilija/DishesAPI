@@ -1,5 +1,6 @@
 ﻿using DishesAPI.EndpointFilters;
 using DishesAPI.EndpointHandlers;
+using DishesAPI.Models;
 using System.Reflection;
 
 namespace DishesAPI.Extensions;
@@ -24,18 +25,34 @@ public static class EndpointRouteBuilderExtensions
         dishesEndpoints.MapGet("", DishesHandlers.GetDishesAsync);
 
         dishWithGuidIdEndpoints.MapGet("", DishesHandlers.GetDishByIdAsync)
-            .WithName("GetDish");
+            .WithName("GetDish")
+            .WithOpenApi()
+            .WithSummary("Get a dish by providing an id.")
+            .WithDescription("Dishes are identified by a URI containing a dish identifier. " +
+            "This identifier is a GUID." +
+            "You can get one specific dish via this endpoint by providing the identifier.");
+          //  .Produces();
 
         dishesEndpoints.MapGet("/{dishName}", DishesHandlers.GetDishByNameAsync)
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .WithOpenApi( operation => 
+            {
+                operation.Deprecated = true; 
+                return operation;
+            });
 
         dishesEndpoints.MapPost("", DishesHandlers.CreateDishAsync)
             .RequireAuthorization("RequireAdminFromBelgium")
-            .AddEndpointFilter<ValidateAnnotationsFilter>();
+            .AddEndpointFilter<ValidateAnnotationsFilter>()
+            .ProducesValidationProblem(400)
+            .Accepts<DishForCreationDto>(
+            "application/json"); // can describe request data type
 
-        dishWithGuidIdEndpointsAndLockFilters.MapPut("", DishesHandlers.UpdateDishAsync);
+        dishWithGuidIdEndpointsAndLockFilters
+            .MapPut("", DishesHandlers.UpdateDishAsync);
 
-        dishWithGuidIdEndpointsAndLockFilters.MapDelete("", DishesHandlers.DeleteDishAsync)
+        dishWithGuidIdEndpointsAndLockFilters
+            .MapDelete("", DishesHandlers.DeleteDishAsync)
             .AddEndpointFilter<LogNotFoundResponseFilter>();
     }
 

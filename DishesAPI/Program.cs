@@ -6,6 +6,7 @@ using DishesAPI.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using System.Net;
 using System.Security.Claims;
 
@@ -30,6 +31,33 @@ builder.Services.AddAuthorizationBuilder()
     .RequireRole("admin")
     .RequireClaim("country", "Belgium"));
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen( option =>
+{
+    option.AddSecurityDefinition("TokenAuth",
+        new()
+        {
+            Name = "Authorization",
+            Description = "Token-based authentication and authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            In = ParameterLocation.Header
+        });
+    option.AddSecurityRequirement(new()
+    {
+        {
+            new ()
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "TokenAuth" }
+                }, 
+                new List<string>()
+            }
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -39,6 +67,9 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseAuthentication(); //not needed anymore but for code crearity added
 app.UseAuthorization(); // neds to be added after Authentication
